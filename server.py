@@ -1,4 +1,4 @@
-import hmac, hashlib, base64, json
+import hmac, hashlib, base64, json, os
 from typing import Optional
 
 from fastapi import FastAPI, Form, Cookie, Body
@@ -7,8 +7,8 @@ from fastapi.responses import Response
 
 app = FastAPI()
 
-SECRET_KEY = "3a118242fc5fdee1ce7fc5de35a97d46a816c18f2f15b8ad8ac3b33d2bba5bf59bccda5b70eb3e"
-PASSWORD_SOLT = "d5bf8348c6576779215d3f4bdb52a0e0f5ddc3cc12c415e3e2b5bb8348c65e"
+SECRET_KEY = os.environ.get("SECRET_KEY")
+PASSWORD_SOLT = os.environ.get("PASSWORD_SOLT")
 
 
 users = {
@@ -28,6 +28,7 @@ users = {
 
 
 def sign_data(data: str) -> str:
+	""" Цифровая подпись для куки файлов """
 
 	return hmac.new(
 		SECRET_KEY.encode(),
@@ -37,6 +38,7 @@ def sign_data(data: str) -> str:
 
 
 def get_username_from_signed_string(username_signed: str) -> Optional[str]:
+	""" Проверка цифровой подлинности """
 
 	username_base64, sign = username_signed.split(".")
 	username = base64.b64decode(username_base64.encode()).decode()
@@ -47,8 +49,12 @@ def get_username_from_signed_string(username_signed: str) -> Optional[str]:
 
 
 def verify_password(username: str, password: str) -> bool:
+	""" Проверка хэшов паролей """
 
-	password_hash = hashlib.sha256((password + PASSWORD_SOLT).encode()).hexdigest().lower()
+	password_hash = hashlib.sha256(
+		(password + PASSWORD_SOLT).encode()
+	).hexdigest().lower()
+
 	stored_password_hash = users[username]["password"].lower()
 	
 	return password_hash == stored_password_hash
@@ -59,6 +65,8 @@ def verify_password(username: str, password: str) -> bool:
 
 @app.get("/")
 def index_page(username: Optional[str] = Cookie(default=None)):
+	""" Home page func """
+	
 	with open("templates/login.html", "r", encoding="utf-8") as file:
 		login_page = file.read()
 
@@ -84,8 +92,8 @@ def index_page(username: Optional[str] = Cookie(default=None)):
 
 @app.post("/login")
 def process_login_page(data: dict = Body(...)):
-	print(f"[DATA] {data}")
-	
+	""" user login func """
+
 	username = data["username"]
 	password = data["password"]
 
@@ -107,7 +115,10 @@ def process_login_page(data: dict = Body(...)):
 		}), 
 		media_type="application/json"
 	)
-	username_signed = base64.b64encode(username.encode()).decode() + "." + sign_data(username)
+	username_signed = base64.b64encode(
+		username.encode()
+	).decode() + "." + sign_data(username)
+
 	response.set_cookie(key="username", value=username_signed)
 
 	return response

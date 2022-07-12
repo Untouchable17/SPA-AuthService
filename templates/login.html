@@ -11,11 +11,7 @@
 			padding: 0;
 			box-sizing: border-box;
 		}
-
-		body {
-			background-color: ghostwhite;
-		}
-
+		body {background-color: ghostwhite;}
 
 		.container {
 			width: 530px;
@@ -34,12 +30,12 @@
 			margin: 20px 0px;
 			width: 100%;
 		}
+		
 		.login__block input {
 			border-radius: 5px;
 			border: 1px solid grey;
 			outline: none;
 		}
-
 		.login__block-button input {
 			border-radius: 5px;
 			border: none;
@@ -50,9 +46,7 @@
 			cursor: pointer;
 			color: #fff;
 			transition: .3s;
-
 		}
-
 	</style>
 
 </head>
@@ -90,7 +84,6 @@
 				});
 
 				let response = await request.json();
-				// console.log("[RESPONSE] ", response_json);
 				if (response.success) {
 					let body = document.querySelector("body");
 					body.style.backgroundColor = "black";
